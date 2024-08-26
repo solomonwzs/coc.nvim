@@ -103,9 +103,9 @@ export default class WorkspaceHandler {
     }, false, 'Generates a snapshot of the current V8 heap and writes it to a JSON file.')
     commands.register({
       id: 'workspace.showOutput',
-      execute: async (name?: string) => {
+      execute: async (name?: string, cmd?: string) => {
         if (!name) name = await window.showQuickPick(workspace.channelNames, { title: 'Choose output name' }) as string
-        window.showOutputChannel(toText(name))
+        window.showOutputChannel(toText(name), cmd)
       }
     }, false, 'open output buffer to show output from languageservers or extensions.')
     commands.register({
@@ -172,6 +172,13 @@ export default class WorkspaceHandler {
     folder = workspace.expand(folder)
     if (!isDirectory(folder)) throw directoryNotExists(folder)
     workspace.workspaceFolderControl.addWorkspaceFolder(folder, true)
+  }
+
+  public removeWorkspaceFolder(folder: string): void {
+    if (!Is.string(folder)) throw TypeError(`folder should be string`)
+    folder = workspace.expand(folder)
+    if (!isDirectory(folder)) throw directoryNotExists(folder)
+    workspace.workspaceFolderControl.removeWorkspaceFolder(folder)
   }
 
   public async bufferCheck(): Promise<void> {

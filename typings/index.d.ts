@@ -3812,8 +3812,17 @@ declare module 'coc.nvim' {
   export interface NvimFloatOptions {
     standalone?: boolean
     focusable?: boolean
-    relative?: 'editor' | 'cursor' | 'win'
+    relative?: 'editor' | 'cursor' | 'win' | 'mouse'
     anchor?: 'NW' | 'NE' | 'SW' | 'SE'
+    border?: 'none' | 'single' | 'double' | 'rounded' | 'solid' | 'shadow' | string[]
+    style?: 'minimal'
+    title?: string
+    title_pos?: 'left' | 'center' | 'right'
+    footer?: string | [string, string][]
+    footer_pos?: 'left' | 'center' | 'right'
+    noautocmd?: boolean
+    fixed?: boolean
+    hide?: boolean
     height: number
     width: number
     row: number
@@ -9545,6 +9554,24 @@ declare module 'coc.nvim' {
      * Undefined by default, which means the width is dynamically calculated.
      */
     width: number | undefined
+    /**
+     * Represents the input prompt box field of the quickpick element
+    **/
+    readonly inputBox: InputBox | undefined
+    /**
+     * The current selection index, can be used to act on an item with onDidFinish, even
+     * if the item is not selected. The index corresponds to the .items or .activeItems
+     * arrays, and can be used to index into them
+    **/
+    readonly currIndex: number
+    /**
+     * The buffer for the popup element of the quick pick containing the .items to be selected
+    **/
+    readonly buffer: number
+    /**
+     * The window for the popup element of the quick pick containing the .items to be selected
+    **/
+    readonly winid: number | undefined
     /**
      * An event signaling when QuickPick closed, fired with selected items or null when canceled.
      */
