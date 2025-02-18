@@ -8934,7 +8934,7 @@ declare module 'coc.nvim' {
     /**
      * Get created document by uri or bufnr.
      */
-    export function getDocument(uri: number | string): Document
+    export function getDocument(uri: number | string): Document | null | undefined
 
     /**
      * Apply WorkspaceEdit.
@@ -9829,6 +9829,11 @@ declare module 'coc.nvim' {
     cursorline?: boolean
     modes?: string[]
     excludeImages?: boolean
+    position?: "fixed" | "auto";
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
   }
 
   export interface FloatFactory {
@@ -10813,7 +10818,7 @@ declare module 'coc.nvim' {
      *
      * @param {string} snippet Textmate snippet string.
      * @param {boolean} select Not select first placeholder when false, default `true`.
-     * @param {Range} range Repalce range, insert to current cursor position when undefined.
+     * @param {Range} range Replace range, insert to current cursor position when undefined.
      * @returns {Promise<boolean>} true when insert success.
      */
     export function insertSnippet(snippet: string | SnippetString, select?: boolean, range?: Range, ultisnip?: UltiSnippetOption | boolean): Promise<boolean>

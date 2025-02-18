@@ -1,4 +1,4 @@
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../../neovim'
 import { Disposable, SymbolKind } from 'vscode-languageserver-protocol'
 import commands from '../../commands'
 import Handler from '../../handler/index'
@@ -87,7 +87,7 @@ describe('Handler', () => {
     })
   })
 
-  describe('checkProvier', () => {
+  describe('checkProvider', () => {
     it('should throw error when provider not found', async () => {
       let doc = await helper.createDocument()
       let err

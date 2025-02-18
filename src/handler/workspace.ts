@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../neovim'
 import { v4 as uuid } from 'uuid'
 import { writeHeapSnapshot } from 'v8'
 import { Location } from 'vscode-languageserver-types'
@@ -231,8 +231,8 @@ export default class WorkspaceHandler {
     }
   }
 
-  public async ensureDocument(): Promise<boolean> {
-    let doc = await workspace.document
+  public async ensureDocument(bufnr?: number): Promise<boolean> {
+    let doc = bufnr ? workspace.getDocument(bufnr) : await workspace.document
     return doc && doc.attached
   }
 

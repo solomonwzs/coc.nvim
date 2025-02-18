@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../neovim'
 import { FormattingOptions, Location, LocationLink, TextEdit } from 'vscode-languageserver-types'
 import { URI } from 'vscode-uri'
 import Configurations from '../configuration'
@@ -186,7 +186,7 @@ export default class Documents implements Disposable {
     return docs
   }
 
-  public getDocument(uri: number | string, caseInsensitive = platform.isWindows || platform.isMacintosh): Document | null {
+  public getDocument(uri: number | string, caseInsensitive = platform.isWindows || platform.isMacintosh): Document | null | undefined {
     if (typeof uri === 'number') {
       return this.buffers.get(uri)
     }

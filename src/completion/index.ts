@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../neovim'
 import { Position } from 'vscode-languageserver-types'
 import { URI } from 'vscode-uri'
 import commands from '../commands'
@@ -144,7 +144,7 @@ export class Completion implements Disposable {
     let suggest = workspace.getConfiguration('suggest', doc)
     this.config = {
       autoTrigger: suggest.get<string>('autoTrigger', 'always'),
-      insertMode: suggest.get<InsertMode>('insertMode', InsertMode.Repalce),
+      insertMode: suggest.get<InsertMode>('insertMode', InsertMode.Replace),
       filterGraceful: suggest.get<boolean>('filterGraceful', true),
       enableFloat: suggest.get<boolean>('enableFloat', true),
       languageSourcePriority: suggest.get<number>('languageSourcePriority', 99),

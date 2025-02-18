@@ -1,4 +1,4 @@
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../../neovim'
 import path from 'path'
 import { Position, Range, TextEdit } from 'vscode-languageserver-protocol'
 import { UltiSnippetContext } from '../../snippets/eval'
@@ -187,7 +187,7 @@ describe('SnippetSession', () => {
       res = await session.start('${1:foo} ${2:bar}', r, false)
       expect(res).toBe(true)
       line = await nvim.line
-      expect(line).toBe('afoo bar b')
+      expect(line).toBe('foo bara b')
     })
 
     it('should not nested when range not contains', async () => {

@@ -1,5 +1,5 @@
 'use strict'
-import type { Neovim } from '@chemzqm/neovim'
+import type { Neovim } from '../neovim'
 import { Position, Range } from 'vscode-languageserver-types'
 import { createLogger } from '../logger'
 import type Document from '../model/document'
@@ -348,7 +348,7 @@ export default class Complete {
     let { insertMode } = this.config
     let { linenr, followWord, position } = this.option
     let line = linenr - 1
-    let end = position.character + (insertMode == InsertMode.Repalce ? followWord.length : 0)
+    let end = position.character + (insertMode == InsertMode.Replace ? followWord.length : 0)
     return Range.create(line, this.inputStart, line, end)
   }
 

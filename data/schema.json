@@ -60,6 +60,28 @@
           "minimum": 0,
           "maximum": 100,
           "description": "Enables pseudo-transparency by set 'winblend' option of window, neovim only."
+        },
+        "position": {
+          "type": "string",
+          "default": "auto",
+          "description": "Controls how floating windows are positioned. When set to `'fixed'`, the window will be positioned according to the `top`, `bottom`, `left`, and `right` settings. When set to `'auto'`, the window follows the default position.",
+          "enum": ["fixed", "auto"]
+        },
+        "top": {
+          "type": "number",
+          "description": "Distance from the top of the editor window in characters. Only takes effect when `position` is set to `'fixed'`. Will be ignored if `bottom` is set."
+        },
+        "bottom": {
+          "type": "number",
+          "description": "Distance from the bottom of the editor window in characters. Only takes effect when `position` is set to `'fixed'`. Takes precedence over `top` if both are set."
+        },
+        "left": {
+          "type": "number",
+          "description": "Distance from the left edge of the editor window in characters. Only takes effect when `position` is set to `'fixed'`. Will be ignored if `right` is set."
+        },
+        "right": {
+          "type": "number",
+          "description": "Distance from the right edge of the editor window in characters. Only takes effect when `position` is set to `'fixed'`. Takes precedence over `left` if both are set."
         }
       }
     },
@@ -826,6 +848,12 @@
       "description": "Enable codeLens feature, require neovim with set virtual text feature.",
       "default": false
     },
+    "codeLens.display": {
+      "type": "boolean",
+      "scope": "language-overridable",
+      "default": true,
+      "description": "Display codeLens."
+    },
     "codeLens.position": {
       "type": "string",
       "scope": "language-overridable",
@@ -907,7 +935,13 @@
     "diagnostic.displayByAle": {
       "type": "boolean",
       "scope": "language-overridable",
-      "description": "Use Ale for display diagnostics in vim, will disable coc for display diagnostics, restart required on change.",
+      "description": "Use Ale, coc-diagnostics-shim.nvim, or other provider to display diagnostics in vim. This setting will disable diagnostic display using coc's handler. A restart required on change.",
+      "default": false
+    },
+    "diagnostic.displayByVimDiagnostic": {
+      "type": "boolean",
+      "scope": "language-overridable",
+      "description": "Display diagnostics with nvim's `vim.diagnostic`. This setting will disable diagnostic display using coc's handler. A restart required on change. Neovim only.",
       "default": false
     },
     "diagnostic.enable": {
@@ -964,7 +998,12 @@
         "maxWidth": {},
         "winblend": {},
         "focusable": {},
-        "shadow": {}
+        "shadow": {},
+        "position": {},
+        "top": {},
+        "bottom": {},
+        "left": {},
+        "right": {}
       }
     },
     "diagnostic.format": {
@@ -1236,7 +1275,12 @@
         "maxHeight": {},
         "winblend": {},
         "focusable": {},
-        "shadow": {}
+        "shadow": {},
+        "position": {},
+        "top": {},
+        "bottom": {},
+        "left": {},
+        "right": {}
       }
     },
     "hover.autoHide": {
@@ -1262,7 +1306,12 @@
         "maxWidth": {},
         "winblend": {},
         "focusable": {},
-        "shadow": {}
+        "shadow": {},
+        "position": {},
+        "top": {},
+        "bottom": {},
+        "left": {},
+        "right": {}
       }
     },
     "hover.previewMaxHeight": {
@@ -1855,7 +1904,12 @@
         "maxWidth": {},
         "winblend": {},
         "focusable": {},
-        "shadow": {}
+        "shadow": {},
+        "position": {},
+        "top": {},
+        "bottom": {},
+        "left": {},
+        "right": {}
       }
     },
     "signature.hideOnTextChange": {

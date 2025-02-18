@@ -1,5 +1,5 @@
 'use strict'
-import type { VirtualTextOption } from '@chemzqm/neovim'
+import type { VirtualTextOption } from '../neovim'
 import { Diagnostic, DiagnosticSeverity, DiagnosticTag, Range, TextEdit } from 'vscode-languageserver-types'
 import { FloatConfig } from '../types'
 import { comparePosition, rangeOverlap } from '../util/position'
@@ -39,6 +39,7 @@ export interface DiagnosticConfig {
   checkCurrentLine: boolean
   enableMessage: string
   displayByAle: boolean
+  displayByVimDiagnostic: boolean
   signPriority: number
   level: number
   locationlistLevel: number | undefined

@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../neovim'
 import { CodeAction, CodeActionContext, CodeActionKind, CodeActionTriggerKind, Range } from 'vscode-languageserver-types'
 import commandManager from '../commands'
 import diagnosticManager from '../diagnostic/manager'
@@ -79,7 +79,7 @@ export default class CodeActions {
     return workspace.initialConfiguration.get<boolean>('coc.preferences.floatActions', true)
   }
 
-  public async doCodeAction(mode: string | null, only?: CodeActionKind[] | string, showDisable = false): Promise<void> {
+  public async doCodeAction(mode: string | null, only: CodeActionKind[] | string, showDisable = false): Promise<void> {
     let { doc } = await this.handler.getCurrentState()
     let range: Range | undefined
     if (mode) range = await window.getSelectedRange(mode)

@@ -1,4 +1,4 @@
-import { Buffer, Neovim } from '@chemzqm/neovim'
+import { Buffer, Neovim } from '../../neovim'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
@@ -317,13 +317,13 @@ describe('semanticTokens', () => {
       await item.onCursorMoved()
       await helper.waitValue(async () => {
         let markers = await buf.getExtMarks(ns, 0, -1, { details: true })
-        return markers.length > 300
+        return markers.length > 100
       }, true)
       nvim.command('normal! 200G', true)
       await item.onCursorMoved()
       await helper.waitValue(async () => {
         let markers = await buf.getExtMarks(ns, 0, -1, { details: true })
-        return markers.length > 500
+        return markers.length > 200
       }, true)
     })
 

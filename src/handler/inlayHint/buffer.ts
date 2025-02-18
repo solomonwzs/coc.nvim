@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../../neovim'
 import { InlayHintKind, Range } from 'vscode-languageserver-types'
 import events from '../../events'
 import languages, { ProviderName } from '../../languages'
@@ -176,13 +176,13 @@ export default class InlayHintBuffer implements SyncItem {
     if ((events.insertMode && !this.config.refreshOnInsertMode) || !this.enabled) return
     this.tokenSource = new CancellationTokenSource()
     let token = this.tokenSource.token
-    let res = await this.nvim.call('coc#window#visible_range', [this.doc.bufnr]) as [number, number]
+    let res = await this.nvim.call('coc#window#visible_range') as [number, number]
     if (!Array.isArray(res) || res[1] <= 0 || token.isCancellationRequested) return
     if (!srcId) srcId = await this.nvim.createNamespace('coc-inlayHint')
     if (token.isCancellationRequested || this.regions.has(res[0], res[1])) return
     const startLine = Math.max(0, res[0] - RenderRangeExtendSize)
     const endLine = Math.min(this.doc.lineCount, res[1] + RenderRangeExtendSize)
-    let range = Range.create(startLine, 0, endLine, 0)
+    let range = this.doc.textDocument.intersectWith(Range.create(startLine, 0, endLine, 0))
     let inlayHints = await this.requestInlayHints(range, token)
     if (inlayHints == null || token.isCancellationRequested) return
     this.regions.add(res[0], res[1])

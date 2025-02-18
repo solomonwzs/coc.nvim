@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from '../neovim'
 import { DefinitionLink, Hover, MarkedString, MarkupContent, Position, Range } from 'vscode-languageserver-types'
 import { URI } from 'vscode-uri'
 import { IConfigurationChangeEvent } from '../configuration/types'
@@ -17,8 +17,7 @@ import { characterIndex } from '../util/string'
 import window from '../window'
 import workspace from '../workspace'
 import { HandlerDelegate } from './types'
-
-export type HoverTarget = 'float' | 'preview' | 'echo'
+import { HoverTarget } from '../plugin'
 
 interface HoverConfig {
   target: HoverTarget

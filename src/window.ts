@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from '@chemzqm/neovim'
+import { Neovim } from './neovim'
 import type { Position, Range } from 'vscode-languageserver-types'
 import type { WorkspaceConfiguration } from './configuration/types'
 import channels from './core/channels'
@@ -59,9 +59,7 @@ export class Window {
     })
   }
 
-  public init(env: Env): void {
-    this.highlights.checkMarkers = this.workspace.has('nvim-0.5.1') || env.isVim
-  }
+  public init(_env: Env): void {}
 
   public get activeTextEditor(): TextEditor | undefined {
     return this.workspace.editors.activeTextEditor
@@ -101,7 +99,6 @@ export class Window {
 
   /**
    * Run command in vim terminal for result
-   *
    * @param cmd Command to run.
    * @param cwd Cwd of terminal, default to result of |getcwd()|.
    */
@@ -111,7 +108,6 @@ export class Window {
 
   /**
    * Open terminal window.
-   *
    * @param cmd Command to run.
    * @param opts Terminal option.
    * @returns number buffer number of terminal
@@ -122,7 +118,6 @@ export class Window {
 
   /**
    * Reveal message with message type.
-   *
    * @param msg Message text to show.
    * @param messageType Type of message, could be `error` `warning` and `more`, default to `more`
    */
@@ -132,7 +127,6 @@ export class Window {
 
   /**
    * Create a new output channel
-   *
    * @param name Unique name of output channel.
    * @returns A new output channel.
    */
@@ -142,7 +136,6 @@ export class Window {
 
   /**
    * Reveal buffer of output channel.
-   *
    * @param name Name of output channel.
    * @param cmd command for open output channel.
    * @param preserveFocus Preserve window focus when true.
@@ -154,7 +147,6 @@ export class Window {
 
   /**
    * Echo lines at the bottom of vim.
-   *
    * @param lines Line list.
    * @param truncate Truncate the lines to avoid 'press enter to continue' when true
    */
@@ -164,7 +156,6 @@ export class Window {
 
   /**
    * Get current cursor position (line, character both 0 based).
-   *
    * @returns Cursor position.
    */
   public getCursorPosition(): Promise<Position> {
@@ -173,7 +164,6 @@ export class Window {
 
   /**
    * Move cursor to position.
-   *
    * @param position LSP position.
    */
   public async moveTo(position: Position): Promise<void> {
@@ -197,7 +187,6 @@ export class Window {
   /**
    * Get current cursor character offset in document,
    * length of line break would always be 1.
-   *
    * @returns Character offset.
    */
   public getOffset(): Promise<number> {
@@ -207,7 +196,6 @@ export class Window {
   /**
    * Get screen position of current cursor(relative to editor),
    * both `row` and `col` are 0 based.
-   *
    * @returns Cursor screen position.
    */
   public getCursorScreenPosition(): Promise<ui.ScreenPosition> {
@@ -216,7 +204,6 @@ export class Window {
 
   /**
    * Create a {@link TreeView} instance.
-   *
    * @param viewId Id of the view, used as title of TreeView when title doesn't exist.
    * @param options Options for creating the {@link TreeView}
    * @returns a {@link TreeView}.
@@ -228,7 +215,6 @@ export class Window {
 
   /**
    * Create statusbar item that would be included in `g:coc_status`.
-   *
    * @param priority Higher priority item would be shown right.
    * @param option
    * @return A new status bar item.
@@ -240,7 +226,6 @@ export class Window {
   /**
    * Get diff from highlight items and current highlights on vim.
    * Return null when buffer not loaded
-   *
    * @param bufnr Buffer number
    * @param ns Highlight namespace
    * @param items Highlight items
@@ -254,7 +239,6 @@ export class Window {
 
   /**
    * Create a FloatFactory, user's configurations are respected.
-   *
    * @param {FloatWinConfig} conf - Float window configuration
    * @returns {FloatFactory}
    */
@@ -267,7 +251,6 @@ export class Window {
 
   /**
    * Show quickpick for single item, use `window.menuPick` for menu at current current position.
-   *
    * @deprecated Use 'window.showMenuPicker()' or `window.showQuickPick` instead.
    * @param items Label list.
    * @param placeholder Prompt text, default to 'choose by number'.
@@ -291,7 +274,6 @@ export class Window {
    * Note that in many cases the more convenient {@link window.showQuickPick}
    * is easier to use. {@link window.createQuickPick} should be used
    * when {@link window.showQuickPick} does not offer the required flexibility.
-   *
    * @return A new {@link QuickPick}.
    */
   public async createQuickPick<T extends QuickPickItem>(config: QuickPickConfig<T> = {}): Promise<QuickPick<T>> {
@@ -300,7 +282,6 @@ export class Window {
 
   /**
    * Show menu picker at current cursor position, |inputlist()| is used as fallback.
-   *
    * @param items Array of texts.
    * @param option Options for menu.
    * @param token A token that can be used to signal cancellation.
@@ -313,7 +294,6 @@ export class Window {
   /**
    * Prompt user for confirm, a float/popup window would be used when possible,
    * use vim's |confirm()| function as callback.
-   *
    * @param title The prompt text.
    * @returns Result of confirm.
    */
@@ -324,7 +304,6 @@ export class Window {
   /**
    * Show dialog window at the center of screen.
    * Note that the dialog would always be closed after button click.
-   *
    * @param config Dialog configuration.
    * @returns Dialog or null when dialog can't work.
    */
@@ -334,7 +313,6 @@ export class Window {
 
   /**
    * Request input from user
-   *
    * @param title Title text of prompt window.
    * @param value Default value of input, empty text by default.
    * @param {InputOptions} option for input window
@@ -346,7 +324,6 @@ export class Window {
 
   /**
    * Creates and show a {@link InputBox} to let the user enter some text input.
-   *
    * @return A new {@link InputBox}.
    */
   public async createInputBox(title: string, value: string | undefined, option?: InputPreference): Promise<InputBox> {
@@ -356,7 +333,6 @@ export class Window {
   /**
    * Show multiple picker at center of screen.
    * Use `this.workspace.env.dialog` to check if dialog could work.
-   *
    * @param items Array of QuickPickItem or string.
    * @param title Title of picker dialog.
    * @param token A token that can be used to signal cancellation.
@@ -371,7 +347,6 @@ export class Window {
   /**
    * Show an information message to users. Optionally provide an array of items which will be presented as
    * clickable buttons.
-   *
    * @param message The message to show.
    * @param items A set of items that will be rendered as actions in the message.
    * @return Promise that resolves to the selected item or `undefined` when being dismissed.
@@ -384,7 +359,6 @@ export class Window {
   /**
    * Show an warning message to users. Optionally provide an array of items which will be presented as
    * clickable buttons.
-   *
    * @param message The message to show.
    * @param items A set of items that will be rendered as actions in the message.
    * @return Promise that resolves to the selected item or `undefined` when being dismissed.
@@ -397,7 +371,6 @@ export class Window {
   /**
    * Show an error message to users. Optionally provide an array of items which will be presented as
    * clickable buttons.
-   *
    * @param message The message to show.
    * @param items A set of items that will be rendered as actions in the message.
    * @return Promise that resolves to the selected item or `undefined` when being dismissed.
@@ -425,7 +398,6 @@ export class Window {
    *
    * Timer is used to add highlights when there're too many highlight items to add,
    * the highlight process won't be finished on that case.
-   *
    * @param {number} bufnr - Buffer name
    * @param {string} ns - Namespace
    * @param {number} priority

@@ -1,5 +1,5 @@
 'use strict'
-import { Buffer, Neovim } from '@chemzqm/neovim'
+import { Buffer, Neovim } from '../neovim'
 import events from '../events'
 import { createLogger } from '../logger'
 import { HighlightItem, QuickPickItem } from '../types'
@@ -143,7 +143,7 @@ export default class QuickPick<T extends QuickPickItem> {
           this.setCursor(this.currIndex + 1)
         } else if (['<C-k>', '<C-p>', '<up>'].includes(key)) {
           this.setCursor(this.currIndex - 1)
-        } else if (this.canSelectMany && key == '<C-@>') {
+        } else if (this.canSelectMany && ['<C-@>', '<C-t>'].includes(key)) {
           this.toggePicked(this.currIndex)
         }
       }
