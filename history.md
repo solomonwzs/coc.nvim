@@ -2,6 +2,54 @@
 
 Notable changes of coc.nvim:
 
+## 2025-03-13
+
+- Add `coc.preferences.autoApplySingleQuickfix` configuration
+
+## 2025-03-07
+
+- Support `extensions.recommendations` configuration.
+- Support for UltiSnip options `t` `m` `s`.
+
+## 2025-03-05
+
+- Export method `workspace.fixWin32unixFilepath` for filepath convert.
+- Add commands `document.enableInlayHint` and `document.disableInlayHint`.
+- Refresh popup menu when completing incomplete sources.
+
+## 2025-03-04
+
+- Add VSCode command `workbench.action.openSettingsJson`.
+- Add `workspace.isTrusted` property.
+
+## 2025-03-03
+
+- Add command `workspace.openLocalConfig`.
+- Support vim built with win32unix enabled, including cygwin, git bash, WSL etc.
+
+## 2025-02-24
+
+- Configurations for file system watch, see `:h coc-config-fileSystemWatch`.
+
+## 2025-02-23
+
+- All global properties works with extensions #5222.
+- Return true or false for boolean option on vim (same as neovim).
+- Support completion sources using vim9script module.
+
+## 2025-02-22
+
+- QuickPick works with vim without terminal support.
+
+## 2025-02-21
+
+- To avoid unexpected signature help window close, signature help will be triggered after placeholder jump by default, when autocmd `CocJumpPlaceholder call CocActionAsync('showSignatureHelp')` not exists.
+- Support `global.formatFilepath` function for customize filepath displayed in symbols & location list.
+
+## 2025-02-20
+
+Use `extensions` section for extension related configurations. Deprecated configuration sections: `coc.preferences.extensionUpdateCheck`, `coc.preferences.extensionUpdateUIInTab` and `coc.preferences.silentAutoupdate`.
+
 ## 2025-01-03
 
 - Add `diagnostic.displayByVimDiagnostic` configuration, set diagnostics to `vim.diagnostic` on nvim, and prevent coc.nvim's handler to display in virtualText/sign/floating etc.
@@ -798,7 +846,7 @@ Notable changes of coc.nvim:
 - fix(language-client): configuration for configured server, closes #930
 - fix(diagnostic): clear diagnostics on filetype change
 - feat(plugin): add download & fetch modules
-- feat(plugin): add highligher module
+- feat(plugin): add highlighter module
 - feat(refactor): add `<Plug>(coc-refactor)` for refactor window
 - feat(extension): use mv module for folder rename
 - feat(extension): support install tagged extension
@@ -807,7 +855,7 @@ Notable changes of coc.nvim:
 - feat(list): support `g:coc_quickfix_open_command`
 - feat(list): add eval action
 - feat(list): add --tab list option
-- feat(list): use highligher module for showHelp
+- feat(list): use highlighter module for showHelp
 - feat(terminal): add noa on window jump
 - feat(terminal): support vim8
 - feat(diagnostic): add diagnosticRelated support

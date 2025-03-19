@@ -1,4 +1,4 @@
-import { Neovim } from '../../neovim'
+import { Neovim } from '@chemzqm/neovim'
 import fs from 'fs'
 import os from 'os'
 import { v4 as uuid } from 'uuid'
@@ -527,11 +527,15 @@ describe('list sources', () => {
     })
 
     it('should do open action', async () => {
+      global.formatFilepath = function() {
+        return ''
+      }
       await manager.start(['--normal', 'location'])
       await manager.session.ui.ready
       await manager.doAction('open')
       let name = await nvim.eval('bufname("%")')
       expect(name).toMatch('sources.test.ts')
+      global.formatFilepath = undefined
     })
 
     it('should do quickfix action', async () => {

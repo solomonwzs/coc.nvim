@@ -598,18 +598,33 @@
       "scope": "application",
       "default": "never",
       "description": "Interval for check extension update, could be daily, weekly, never",
+      "deprecationMessage": "Use configuration 'extensions.updateCheck' instead.",
       "enum": ["daily", "weekly", "never"]
     },
     "coc.preferences.extensionUpdateUIInTab": {
       "type": "boolean",
       "scope": "application",
       "default": false,
-      "description": "Display extension updating UI in vim tab"
+      "deprecationMessage": "Use configuration 'extensions.updateUIInTab' instead.",
+      "description": "Display extension updating UI in new vim tab"
+    },
+    "coc.preferences.silentAutoupdate": {
+      "type": "boolean",
+      "description": "Not open split window with update status when performing auto update.",
+      "deprecationMessage": "Use configuration 'extensions.silentAutoupdate' instead.",
+      "scope": "application",
+      "default": true
     },
     "coc.preferences.floatActions": {
       "type": "boolean",
       "scope": "application",
       "description": "Set to false to disable float/popup support for actions menu.",
+      "default": true
+    },
+    "coc.preferences.autoApplySingleQuickfix": {
+      "type": "boolean",
+      "scope": "application",
+      "description": "Automatically apply the single quickfix action .",
       "default": true
     },
     "coc.preferences.formatOnSave": {
@@ -631,7 +646,7 @@
       "scope": "resource",
       "default": null,
       "description": "Filetypes that should run format on save.",
-      "deprecationMessage": "Use coc.preferences.formatOnSave as language override configuration instead, see :h coc-configuration-scope",
+      "deprecationMessage": "Use 'coc.preferences.formatOnSave' as language override configuration instead, see :h coc-configuration-scope",
       "items": {
         "type": "string"
       }
@@ -647,7 +662,7 @@
       "default": null,
       "scope": "resource",
       "description": "Filetypes that should run format on typing, only works when `coc.preferences.formatOnType` is `true`",
-      "deprecationMessage": "Use coc.preferences.formatOnType as language override configuration instead, see :h coc-configuration-scope",
+      "deprecationMessage": "Use 'coc.preferences.formatOnType' as language override configuration instead, see :h coc-configuration-scope",
       "items": {
         "type": "string"
       }
@@ -703,12 +718,6 @@
       "default": true,
       "description": "Disable to stop Refactor-Rename float/popup window from populating with old name in the New Name field."
     },
-    "coc.preferences.silentAutoupdate": {
-      "type": "boolean",
-      "description": "Not open split window with update status when performing auto update.",
-      "scope": "application",
-      "default": true
-    },
     "coc.preferences.useQuickfixForLocations": {
       "type": "boolean",
       "scope": "application",
@@ -718,6 +727,7 @@
     "coc.preferences.watchmanPath": {
       "type": "string",
       "scope": "application",
+      "deprecationMessage": "Use configuration \"fileSystemWatch.watchmanPath\" instead.",
       "description": "executable path for https://facebook.github.io/watchman/, detected from $PATH by default",
       "default": null
     },
@@ -1112,7 +1122,7 @@
     "diagnostic.virtualText": {
       "type": "boolean",
       "scope": "language-overridable",
-      "description": "Use virtual text to display diagnostics, requires neovim >= 0.5.0 or vim >= 9.0.0067.",
+      "description": "Use virtual text to display diagnostics.",
       "default": false
     },
     "diagnostic.virtualTextAlign": {
@@ -1258,6 +1268,27 @@
       "scope": "resource",
       "description": "Timeout for document highlight, in milliseconds."
     },
+    "fileSystemWatch.watchmanPath": {
+      "type": ["null", "string"],
+      "scope": "application",
+      "description": "executable path for https://facebook.github.io/watchman/, detected from $PATH by default",
+      "default": null
+    },
+    "fileSystemWatch.enable": {
+      "type": "boolean",
+      "default": true,
+      "scope": "application",
+      "description": "Enable file system watch support for workspace folders."
+    },
+    "fileSystemWatch.ignoredFolders": {
+      "type": "array",
+      "default": ["/private/tmp", "/", "${tmpdir}"],
+      "scope": "application",
+      "description": "List of folders that should not be watched for file changes, environment variables and minimatch patterns can be used.",
+      "items": {
+        "type": "string"
+      }
+    },
     "floatFactory.floatConfig": {
       "type": "object",
       "scope": "application",
@@ -1351,6 +1382,34 @@
       "description": "Controls whether the proxy server certificate should be verified against the list of supplied CAs",
       "default": true,
       "scope": "application"
+    },
+    "extensions.updateCheck": {
+      "type": "string",
+      "scope": "application",
+      "default": "never",
+      "description": "Interval time for check extension update, could be daily, weekly, never",
+      "enum": ["daily", "weekly", "never"]
+    },
+    "extensions.recommendations": {
+      "type": "array",
+      "scope": "resource",
+      "description": "List of extensions recommended for installation in the current project",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "extensions.silentAutoupdate": {
+      "type": "boolean",
+      "description": "Not open split window with update status when performing auto update.",
+      "scope": "application",
+      "default": true
+    },
+    "extensions.updateUIInTab": {
+      "type": "boolean",
+      "scope": "application",
+      "default": false,
+      "description": "Display extension updating UI in new vim tab"
     },
     "inlayHint.enable": {
       "type": "boolean",
@@ -2262,7 +2321,7 @@
     "suggest.virtualText": {
       "type": "boolean",
       "scope": "application",
-      "description": "Show virtual text for insert word of selected item, requires neovim >= 0.5.0 or vim >= 9.0.0067",
+      "description": "Show virtual text for insert word of selected item",
       "default": false
     },
     "tree.closedIcon": {

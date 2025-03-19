@@ -2,14 +2,19 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
+import { URI } from 'vscode-uri'
 import which from 'which'
 import commands from '../../commands'
+import { ConfigurationUpdateTarget } from '../../configuration/types'
 import extensions, { Extensions, toUrl } from '../../extension'
+import { Disposable, disposeAll } from '../../util'
 import { writeFile, writeJson } from '../../util/fs'
+import window from '../../window'
 import workspace from '../../workspace'
 import helper from '../helper'
 
 let tmpfolder: string
+let disposables: Disposable[] = []
 beforeAll(async () => {
   await helper.setup()
 })
@@ -23,6 +28,7 @@ afterEach(() => {
     fs.rmSync(tmpfolder, { force: true, recursive: true })
     tmpfolder = undefined
   }
+  disposeAll(disposables)
 })
 
 describe('extensions', () => {
@@ -38,20 +44,39 @@ describe('extensions', () => {
     expect(extensions.onDidActiveExtension).toBeDefined()
     expect(extensions.onDidUnloadExtension).toBeDefined()
     expect(extensions.schemes).toBeDefined()
-    expect(extensions.creteInstaller('npm', 'id')).toBeDefined()
+    expect(extensions.createInstaller('npm', 'id')).toBeDefined()
   })
 
   it('should not throw with addSchemeProperty', async () => {
     extensions.addSchemeProperty('', null)
   })
 
+  it('should get update settings', async () => {
+    let settings = extensions.getUpdateSettings()
+    expect(settings.updateCheck).toBe('never')
+    expect(settings.updateUIInTab).toBe(false)
+    expect(settings.silentAutoupdate).toBe(true)
+    let config = workspace.getConfiguration('extensions')
+    await config.update('updateCheck', 'weekly', ConfigurationUpdateTarget.Global)
+    await config.update('updateUIInTab', true, ConfigurationUpdateTarget.Global)
+    await config.update('silentAutoupdate', false, ConfigurationUpdateTarget.Global)
+    settings = extensions.getUpdateSettings()
+    expect(settings.updateCheck).toBe('weekly')
+    expect(settings.updateUIInTab).toBe(true)
+    expect(settings.silentAutoupdate).toBe(false)
+    await config.update('updateCheck', undefined, ConfigurationUpdateTarget.Global)
+    await config.update('updateUIInTab', undefined, ConfigurationUpdateTarget.Global)
+    await config.update('silentAutoupdate', undefined, ConfigurationUpdateTarget.Global)
+  })
+
   it('should toggle auto update', async () => {
     await commands.executeCommand('extensions.toggleAutoUpdate')
-    let config = workspace.getConfiguration('coc.preferences').get('extensionUpdateCheck')
-    expect(config).toBe('daily')
+    let config = workspace.getConfiguration('extensions')
+    expect(config.get('updateCheck')).toBe('daily')
     await commands.executeCommand('extensions.toggleAutoUpdate')
-    config = workspace.getConfiguration('coc.preferences').get('extensionUpdateCheck')
-    expect(config).toBe('never')
+    config = workspace.getConfiguration('extensions')
+    expect(config.get('updateCheck')).toBe('never')
+    await config.update('extensions.updateCheck', undefined, ConfigurationUpdateTarget.Global)
   })
 
   it('should get extensions stat', async () => {
@@ -162,7 +187,7 @@ describe('extensions', () => {
   })
 
   it('should catch error when installExtensions', async () => {
-    let spy = jest.spyOn(extensions, 'creteInstaller').mockImplementation(() => {
+    let spy = jest.spyOn(extensions, 'createInstaller').mockImplementation(() => {
       return {
         on: (_key, cb) => {
           cb('msg', false)
@@ -184,7 +209,7 @@ describe('extensions', () => {
     let spy = jest.spyOn(extensions, 'globalExtensionStats').mockImplementation(() => {
       return [{ id: 'test' }] as any
     })
-    let s = jest.spyOn(extensions, 'creteInstaller').mockImplementation(() => {
+    let s = jest.spyOn(extensions, 'createInstaller').mockImplementation(() => {
       return {
         on: () => {},
         update: () => {
@@ -201,7 +226,7 @@ describe('extensions', () => {
     let spy = jest.spyOn(extensions, 'globalExtensionStats').mockImplementation(() => {
       return [{ id: 'test' }, { id: 'global', isLocked: true }, { id: 'disabled', state: 'disabled' }] as any
     })
-    let s = jest.spyOn(extensions, 'creteInstaller').mockImplementation(() => {
+    let s = jest.spyOn(extensions, 'createInstaller').mockImplementation(() => {
       return {
         on: (_key, cb) => {
           cb('msg', false)
@@ -212,7 +237,7 @@ describe('extensions', () => {
         }
       } as any
     })
-    await extensions.updateExtensions()
+    await extensions.updateExtensions(true, true)
     spy.mockRestore()
     s.mockRestore()
   })
@@ -222,7 +247,7 @@ describe('extensions', () => {
       return [{ id: 'test', exotic: true, uri: 'http://example.com' }] as any
     })
     let called = false
-    let s = jest.spyOn(extensions, 'creteInstaller').mockImplementation(() => {
+    let s = jest.spyOn(extensions, 'createInstaller').mockImplementation(() => {
       return {
         on: (_key, cb) => {
           cb('msg', false)
@@ -262,7 +287,7 @@ describe('extensions', () => {
   it('should install global extension', async () => {
     expect(extensions.getExtensionById('coc-omni')).toBeUndefined()
     let folder = path.join(extensions.modulesFolder, 'coc-omni')
-    let spy = jest.spyOn(extensions, 'creteInstaller').mockImplementation(() => {
+    let spy = jest.spyOn(extensions, 'createInstaller').mockImplementation(() => {
       return {
         on: () => {},
         install: async () => {
@@ -291,5 +316,51 @@ describe('extensions', () => {
     await helper.doAction('uninstallExtension', 'coc-omni')
     item = extensions.getExtension('coc-omni')
     expect(item).toBeUndefined()
+  })
+
+  it('should checkRecommendation', async () => {
+    await extensions.checkRecommendation({ name: 'tmp', uri: URI.file(__dirname).toString() })
+    tmpfolder = path.join(os.tmpdir(), uuid())
+    let folder = path.join(tmpfolder, '.vim')
+    fs.mkdirSync(folder, { recursive: true })
+
+    // fs.mkdirSync(path.join(tmpfolder, '.git'), { recursive: true })
+    let jsonFile = path.join(folder, 'coc-settings.json')
+    fs.writeFileSync(jsonFile, `{"extensions.recommendations": ["coc-abc", "coc-def"]}`)
+    let returnValue
+    let calledTimes = 0
+    let spy = jest.spyOn(window, 'showInformationMessage').mockImplementation(() => {
+      calledTimes++
+      return Promise.resolve(returnValue)
+    })
+    disposables.push({
+      dispose: () => {
+        spy.mockRestore()
+      }
+    })
+    await helper.edit(jsonFile)
+    workspace.workspaceFolderControl.addWorkspaceFolder(tmpfolder, true)
+    await helper.waitValue(() => calledTimes, 1)
+    let called = false
+    let s = jest.spyOn(extensions, 'installExtensions').mockImplementation(() => {
+      called = true
+      return Promise.resolve(undefined)
+    })
+    disposables.push({
+      dispose: () => {
+        s.mockRestore()
+      }
+    })
+    returnValue = { index: 1 }
+    let uri = URI.file(tmpfolder).toString()
+    await extensions.checkRecommendation({ name: 'tmp', uri })
+    expect(called).toBe(true)
+    returnValue = { index: 2 }
+    await extensions.checkRecommendation({ name: 'tmp', uri })
+    expect(extensions.states.shouldPrompt(uri)).toBe(false)
+    let curr = calledTimes
+    await extensions.checkRecommendation({ name: 'tmp', uri })
+    expect(calledTimes).toBe(curr)
+    extensions.states.reset()
   })
 })

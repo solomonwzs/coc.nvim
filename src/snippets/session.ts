@@ -1,12 +1,13 @@
 'use strict'
-import { Neovim } from '../neovim'
+import { Neovim } from '@chemzqm/neovim'
 import { Position, Range, TextEdit } from 'vscode-languageserver-types'
+import events from '../events'
 import { createLogger } from '../logger'
 import Document from '../model/document'
 import { LinesTextDocument } from '../model/textdocument'
-import { TextDocumentContentChange, UltiSnippetOption } from '../types'
+import { JumpInfo, TextDocumentContentChange, UltiSnippetOption } from '../types'
 import { Mutex } from '../util/mutex'
-import { equals } from '../util/object'
+import { deepClone, equals } from '../util/object'
 import { comparePosition, emptyRange, getEnd, isSingleLine, positionInRange, rangeInRange } from '../util/position'
 import { CancellationTokenSource, Disposable, Emitter, Event } from '../util/protocol'
 import { byteIndex } from '../util/string'
@@ -36,6 +37,7 @@ export class SnippetSession {
   private tokenSource: CancellationTokenSource
   private disposable: Disposable
   public mutex = new Mutex()
+  private removeWhiteSpace = false
   private _applying = false
   private _isActive = false
   private _snippet: CocSnippet = null
@@ -58,12 +60,14 @@ export class SnippetSession {
     const { document } = this
     const placeholder = this.getReplacePlaceholder(range)
     const edits: TextEdit[] = []
+    if (context?.removeWhiteSpace) this.removeWhiteSpace = true
     if (placeholder) {
       // update all snippet.
       let r = this.snippet.range
       let previous = document.textDocument.getText(r)
       let parts = getParts(placeholder.value, placeholder.range, range)
       this.current = await this.snippet.insertSnippet(placeholder, inserted, parts, context)
+      this.deleteVimGlobal()
       let edit = reduceTextEdit({
         range: r,
         newText: this.snippet.text
@@ -73,6 +77,7 @@ export class SnippetSession {
       const resolver = new SnippetVariableResolver(this.nvim, workspace.workspaceFolderControl)
       let snippet = new CocSnippet(inserted, range.start, this.nvim, resolver)
       await snippet.init(context)
+      this.deleteVimGlobal()
       this._snippet = snippet
       this.current = snippet.firstPlaceholder!.marker
       edits.push(TextEdit.replace(range, snippet.text))
@@ -114,6 +119,11 @@ export class SnippetSession {
     return placeholder
   }
 
+  private deleteVimGlobal() {
+    this.nvim.call('coc#compat#del_var', ['coc_selected_text'], true)
+    this.nvim.call('coc#compat#del_var', ['coc_last_placeholder'], true)
+  }
+
   private activate(): void {
     if (this._isActive) return
     this._isActive = true
@@ -145,6 +155,16 @@ export class SnippetSession {
     await this.forceSynchronize()
     let curr = this.placeholder
     if (!curr) return
+    if (this.removeWhiteSpace) {
+      const { before, after, range, value } = curr
+      let ms = before.match(/\s+$/)
+      if (value === '' && after.startsWith('\n') && ms) {
+        let startCharacter = range.start.character - ms[0].length
+        let textEdit = TextEdit.del(Range.create(Position.create(range.start.line, startCharacter), deepClone(range.start)))
+        await this.document.applyEdits([textEdit])
+        await this.forceSynchronize()
+      }
+    }
     let next = this.snippet.getNextPlaceholder(curr.index)
     if (next) await this.selectPlaceholder(next)
   }
@@ -190,6 +210,11 @@ export class SnippetSession {
         }
       }
     }
+    let info: JumpInfo = {
+      range: placeholder.range,
+      charbefore: start.character == 0 ? '' : line.slice(start.character - 1, start.character)
+    }
+    void events.fire('PlaceholderJump', [document.bufnr, info])
   }
 
   private highlights(placeholder: CocSnippetPlaceholder, redrawVim = true): void {
@@ -390,7 +415,7 @@ export class SnippetSession {
     if (ultisnip) context = Object.assign({ range: Range.create(position, position), line }, ultisnip)
     const resolver = new SnippetVariableResolver(nvim, workspace.workspaceFolderControl)
     let snippet = new CocSnippet(snippetString, position, nvim, resolver)
-    await snippet.init(context, true)
+    await snippet.init(context)
     return snippet.text
   }
 }

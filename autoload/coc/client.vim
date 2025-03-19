@@ -1,7 +1,5 @@
 scriptencoding utf-8
-let s:root = expand('<sfile>:h:h:h')
 let s:is_vim = !has('nvim')
-let s:is_win = has("win32") || has("win64")
 let s:clients = {}
 
 if get(g:, 'node_client_debug', 0)
@@ -59,7 +57,7 @@ function! s:start() dict
           \ 'env': {
             \ 'NODE_NO_WARNINGS': '1',
             \ 'VIM_NODE_RPC': '1',
-            \ 'TMPDIR': tmpdir,
+            \ 'TMPDIR': coc#util#win32unix_to_node(tmpdir),
           \ }
           \}
     let job = job_start(self.command, options)
@@ -76,7 +74,7 @@ function! s:start() dict
           \ 'rpc': 1,
           \ 'on_stderr': {channel, msgs -> s:on_stderr(self.name, msgs)},
           \ 'on_exit': {channel, code -> s:on_exit(self.name, code)},
-          \ 'env': { 'NODE_NO_WARNINGS': '1', 'TMPDIR': tmpdir }
+          \ 'env': { 'NODE_NO_WARNINGS': '1', 'TMPDIR': coc#util#win32unix_to_node(tmpdir) }
           \ }
     let chan_id = jobstart(self.command, opts)
     if chan_id <= 0
@@ -346,10 +344,18 @@ endfunction
 
 function! coc#client#open_log()
   if !get(g:, 'node_client_debug', 0)
-    echohl Error | echon '[coc.nvim] use let g:node_client_debug = 1 in your vimrc to enable debug mode.' | echohl None
+    throw '[coc.nvim] use let g:node_client_debug = 1 in your vimrc to enable debug mode.'
     return
   endif
   execute 'vs '.s:logfile
+endfunction
+
+function! coc#client#get_log()
+  if !get(g:, 'node_client_debug', 0)
+    throw '[coc.nvim] use let g:node_client_debug = 1 in your vimrc to enable debug mode.'
+    return ''
+  endif
+  return s:logfile
 endfunction
 
 function! s:on_error(name, msgs) abort

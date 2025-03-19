@@ -39,6 +39,7 @@ export interface CompleteOption {
 export interface CompleteDoneOption extends CompleteOption {
   readonly snippetsSupport: boolean
   readonly insertMode: InsertMode
+  readonly itemDefaults?: ItemDefaults
 }
 
 // For filter, render and resolve
@@ -182,7 +183,7 @@ export interface SourceConfig<T extends ExtendedCompleteItem = ExtendedCompleteI
   filepath?: string
   documentSelector?: DocumentSelector
   firstMatch?: boolean
-  optionalFns?: string[]
+  remoteFns?: string[]
   refresh?(): Promise<void>
   toggle?(): void
   onEnter?(bufnr: number): void
@@ -199,7 +200,7 @@ export interface ISource<T extends CompleteItem = CompleteItem> {
   shortcut?: string
   priority?: number
   sourceType?: SourceType
-  optionalFns?: string[]
+  remoteFns?: string[]
   triggerCharacters?: string[]
   triggerOnly?: boolean
   triggerPatterns?: RegExp[]

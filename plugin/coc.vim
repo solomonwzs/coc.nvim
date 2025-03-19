@@ -166,7 +166,7 @@ function! s:InstallOptions(...)abort
 endfunction
 
 function! s:OpenConfig()
-  let home = coc#util#get_config_home()
+  let home = coc#util#get_config_home(1)
   if !isdirectory(home)
     echohl MoreMsg
     echom 'Config directory "'.home.'" does not exist, create? (y/n)'
@@ -327,7 +327,7 @@ endfunction
 function! s:VimEnter() abort
   if coc#rpc#started()
     if !exists('$COC_NVIM_REMOTE_ADDRESS')
-      call coc#rpc#notify('VimEnter', [coc#util#path_replace_patterns(), join(globpath(&runtimepath, "", 0, 1), ",")])
+      call coc#rpc#notify('VimEnter', [join(globpath(&runtimepath, "", 0, 1), ",")])
     endif
   elseif get(g:, 'coc_start_at_startup', 1)
     call coc#rpc#start_server()
@@ -414,10 +414,6 @@ function! s:Enable(initialize)
     autocmd BufReadCmd,FileReadCmd,SourceCmd list://* call coc#list#setup(expand('<amatch>'))
     autocmd BufWriteCmd __coc_refactor__* :call coc#rpc#notify('saveRefactor', [+expand('<abuf>')])
     autocmd ColorScheme * call s:Highlight() | call s:Autocmd('ColorScheme')
-
-    if has('nvim-0.10')
-      autocmd User CocDiagnosticChange call v:lua.require('coc.diagnostic').on_diagnostic_change()
-    endif
   augroup end
   if a:initialize == 0
      call coc#rpc#request('attach', [])
@@ -703,8 +699,6 @@ command! -nargs=0 -bar CocUpdateSync   :call coc#util#update_extensions()
 command! -nargs=* -bar -complete=custom,s:InstallOptions CocInstall   :call coc#util#install_extension([<f-args>])
 
 call s:Enable(1)
-augroup coc_dynamic_autocmd
-augroup END
 augroup coc_dynamic_content
 augroup END
 augroup coc_dynamic_option

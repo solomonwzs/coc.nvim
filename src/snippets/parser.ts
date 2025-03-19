@@ -1,11 +1,11 @@
 'use strict'
-import { Neovim } from '../neovim'
+import { Neovim } from '@chemzqm/neovim'
 import { createLogger } from '../logger'
 import { defaultValue } from '../util'
 import { groupBy } from '../util/array'
 import { CharCode } from '../util/charCode'
 import { unidecode } from '../util/node'
-import { getCharIndexes, toText } from '../util/string'
+import { iterateCharacter, toText } from '../util/string'
 import { convertRegex, evalCode, EvalKind, executePythonCode, getVariablesCode, prepareMatchCode, UltiSnippetContext } from './eval'
 const logger = createLogger('snippets-parser')
 const ULTISNIP_VARIABLES = ['VISUAL', 'YANK', 'UUID']
@@ -83,6 +83,10 @@ export class Scanner {
 
   public tokenText(token: Token): string {
     return this.value.substr(token.pos, token.len)
+  }
+
+  public isEnd(): boolean {
+    return this.pos >= this.value.length
   }
 
   public next(): Token {
@@ -334,6 +338,13 @@ export class Placeholder extends TransformableMarker {
       : undefined
   }
 
+  public get nestedPlaceholderCount(): number {
+    if (this.transform) return 0
+    return this._children.reduce((p, marker) => {
+      return p + (marker instanceof Placeholder ? 1 + marker.nestedPlaceholderCount : 0)
+    }, 0)
+  }
+
   public toTextmateString(): string {
     let transformString = ''
     if (this.transform) {
@@ -419,18 +430,27 @@ export class Transform extends Marker {
     let ret = ''
     let backslashIndexes: number[] = []
     for (const marker of this._children) {
+      let val = ''
+      let len = ret.length
       if (marker instanceof FormatString) {
-        let val = marker.resolve(groups[marker.index] || '')
+        val = marker.resolve(groups[marker.index] ?? '')
         if (this.ultisnip && val.indexOf('\\') !== -1) {
-          let s = ret.length
-          backslashIndexes.push(...getCharIndexes(val, '\\').map(i => i + s))
+          for (let idx of iterateCharacter(val, '\\')) {
+            backslashIndexes.push(len + idx)
+          }
         }
-        ret += val
       } else if (marker instanceof ConditionString) {
-        ret += marker.resolve(groups[marker.index])
+        val = marker.resolve(groups[marker.index])
+        if (this.ultisnip) {
+          val = val.replace(/(?<!\\)\$(\d+)/g, (...args) => {
+            return groups[Number(args[1])] ?? ''
+          })
+        }
       } else {
-        ret += marker.toString()
+        val = marker.toString()
       }
+
+      ret += val
     }
     if (this.ascii) ret = unidecode(ret)
     return this.ultisnip ? transformEscapes(ret, backslashIndexes) : ret
@@ -483,6 +503,42 @@ export class ConditionString extends Marker {
 
   public clone(): ConditionString {
     return new ConditionString(this.index, this.ifValue, this.elseValue)
+  }
+}
+
+export class ConditionMarker extends Marker {
+  constructor(
+    public readonly index: number,
+    protected ifMarkers: Marker[] = [],
+    protected elseMarkers: Marker[] = []
+  ) {
+    super()
+  }
+
+  public resolve(value: string, groups: string[]): string {
+    let fn = (p: string, c: Marker): string => {
+      return p + (c instanceof FormatString ? c.resolve(groups[c.index]) : c.toString())
+    }
+    if (value) return this.ifMarkers.reduce(fn, '')
+    return this.elseMarkers.reduce(fn, '')
+  }
+
+  public addIfMarker(marker: Marker) {
+    this.ifMarkers.push(marker)
+  }
+
+  public addElseMarker(marker: Marker) {
+    this.elseMarkers.push(marker)
+  }
+
+  public toTextmateString(): string {
+    let ifValue = this.ifMarkers.reduce((p, c) => p + c.toTextmateString(), '')
+    let elseValue = this.elseMarkers.reduce((p, c) => p + c.toTextmateString(), '')
+    return '(?' + this.index + ':' + ifValue + (elseValue.length > 0 ? ':' + elseValue : '') + ')'
+  }
+
+  public clone(): ConditionMarker {
+    return new ConditionMarker(this.index, this.ifMarkers.map(m => m.clone()), this.elseMarkers.map(m => m.clone()))
   }
 }
 
@@ -882,6 +938,7 @@ export class TextmateSnippet extends Marker {
       let idx = p.index
       if (p.isFinalTabstop) {
         p.index = maxIndexAdded + index
+        p.primary = true
       } else {
         p.index = p.index + index
       }
@@ -1290,6 +1347,27 @@ export class SnippetParser {
     return true
   }
 
+  private _checkCulybrace(marker: Marker): boolean {
+    let count = 0
+    for (marker of marker.children) {
+      if (marker instanceof Text) {
+        let text = marker.value
+        for (let index = 0; index < text.length; index++) {
+          const ch = text[index]
+          if (ch === '\n') {
+            return true
+          }
+          if (ch === '{') {
+            count++
+          } else if (ch === '}') {
+            count--
+          }
+        }
+      }
+    }
+    return count <= 0
+  }
+
   // ${1:<children>}, ${1} -> placeholder
   private _parseComplexPlaceholder(parent: Marker): boolean {
     let index: string
@@ -1297,20 +1375,22 @@ export class SnippetParser {
     const match = this._accept(TokenType.Dollar)
       && this._accept(TokenType.CurlyOpen)
       && (index = this._accept(TokenType.Int, true))
-
     if (!match) {
       return this._backTo(token)
     }
-
     const placeholder = new Placeholder(Number(index))
-
     if (this._accept(TokenType.Colon)) {
       // ${1:<children>}
       // eslint-disable-next-line no-constant-condition
       while (true) {
-
+        const lastChar = this._scanner.isEnd()
         // ...} -> done
         if (this._accept(TokenType.CurlyClose)) {
+          // check if missed paried }
+          if (!this._checkCulybrace(placeholder) && !lastChar) {
+            placeholder.appendChild(new Text('}'))
+            continue
+          }
           parent.appendChild(placeholder)
           return true
         }
@@ -1572,6 +1652,7 @@ export class SnippetParser {
       return false
     }
     let text = this._until(TokenType.CloseParen, true)
+    // TODO parse ConditionMarker for ultisnip
     if (text) {
       let i = 0
       while (i < text.length) {

@@ -1,17 +1,18 @@
 'use strict'
-import { Neovim } from '../neovim'
+import { Neovim } from '@chemzqm/neovim'
 import { CodeAction, CodeActionKind, Location, Position, Range, SymbolKind } from 'vscode-languageserver-types'
 import { URI } from 'vscode-uri'
 import commands from '../commands'
 import events from '../events'
 import languages, { ProviderName } from '../languages'
 import { createLogger } from '../logger'
+import * as Is from '../util/is'
 import Document from '../model/document'
 import { StatusBarItem } from '../model/status'
 import { TextDocumentMatch } from '../types'
 import { disposeAll, getConditionValue } from '../util'
 import { getSymbolKind } from '../util/convert'
-import { toObject } from '../util/object'
+import { hasOwnProperty, toObject } from '../util/object'
 import { CancellationToken, CancellationTokenSource, Disposable } from '../util/protocol'
 import { getRangesFromEdit } from '../util/textedit'
 import window from '../window'
@@ -139,6 +140,12 @@ export default class Handler implements HandlerDelegate {
         this.nvim.command('CocRestart', true)
       }
     }, true)
+    commands.register({
+      id: 'workbench.action.openSettingsJson',
+      execute: () => {
+        this.nvim.command('CocConfig', true)
+      }
+    }, true)
 
     this.register('vscode.open', async (url: string | URI) => {
       await workspace.openResource(url.toString())
@@ -256,9 +263,9 @@ export default class Handler implements HandlerDelegate {
   public getIcon(kind: SymbolKind): { text: string, hlGroup: string } {
     let { labels } = this
     let kindText = getSymbolKind(kind)
-    let defaultIcon = typeof labels['default'] === 'string' ? labels['default'] : kindText[0].toLowerCase()
-    let text = kindText == 'Unknown' ? '' : labels[kindText[0].toLowerCase() + kindText.slice(1)]
-    if (!text) text = defaultIcon
+    const key = kindText[0].toLowerCase() + kindText.slice(1)
+    let text = hasOwnProperty(labels, key) ? labels[key] : undefined
+    if (!Is.string(text) || !text.length) text = Is.string(labels['default']) ? labels['default'] : kindText[0].toLowerCase()
     return {
       text,
       hlGroup: kindText == 'Unknown' ? 'CocSymbolDefault' : `CocSymbol${kindText}`

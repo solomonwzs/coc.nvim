@@ -1,5 +1,5 @@
 'use strict'
-import { Neovim } from './neovim'
+import { Neovim } from '@chemzqm/neovim'
 import { CallHierarchyItem, CodeAction, CodeActionKind, InsertTextMode, Range, WorkspaceSymbol } from 'vscode-languageserver-types'
 import commandManager from './commands'
 import completion, { Completion } from './completion'
@@ -13,13 +13,11 @@ import listManager from './list/manager'
 import { createLogger } from './logger'
 import services from './services'
 import snippetManager from './snippets/manager'
-import { UltiSnippetOption } from './types'
+import { HoverTarget, UltiSnippetOption } from './types'
 import { Disposable, disposeAll, getConditionValue } from './util'
 import window from './window'
 import workspace, { Workspace } from './workspace'
 const logger = createLogger('plugin')
-
-export type HoverTarget = 'float' | 'preview' | 'echo'
 
 export default class Plugin {
   private ready = false
@@ -56,7 +54,7 @@ export default class Plugin {
     this.addAction('addWorkspaceFolder', (folder: string) => this.handler.workspace.addWorkspaceFolder(folder))
     this.addAction('removeWorkspaceFolder', (folder: string) => this.handler.workspace.removeWorkspaceFolder(folder))
     this.addAction('getConfig', (key: string) => this.handler.workspace.getConfiguration(key))
-    this.addAction('doAutocmd', (id: number, ...args: []) => this.handler.workspace.doAutocmd(id, args))
+    this.addAction('doAutocmd', (id: string, ...args: []) => this.handler.workspace.doAutocmd(id, args))
     this.addAction('openLog', () => this.handler.workspace.openLog())
     this.addAction('attach', () => workspace.attach())
     this.addAction('detach', () => workspace.detach())
@@ -72,7 +70,6 @@ export default class Plugin {
     this.addAction('showInfo', () => this.handler.workspace.showInfo())
     this.addAction('hasProvider', (id: string, bufnr?: number) => this.handler.hasProvider(id, bufnr))
     this.addAction('cursorsSelect', (bufnr: number, kind: string, mode: string) => this.cursors.select(bufnr, kind, mode))
-    this.addAction('fillDiagnostics', (bufnr: number) => diagnosticManager.setLocationlist(bufnr))
     this.addAction('commandList', () => this.handler.commands.getCommandList())
     this.addAction('selectSymbolRange', (inner: boolean, visualmode: string, supportedSymbols: string[]) => this.handler.symbols.selectSymbolRange(inner, visualmode, supportedSymbols))
     this.addAction('openList', (...args: string[]) => listManager.start(args))
@@ -99,6 +96,7 @@ export default class Plugin {
     this.addAction('sourceStat', () => sources.sourceStats())
     this.addAction('refreshSource', (name: string) => sources.refresh(name))
     this.addAction('toggleSource', (name: string) => sources.toggleSource(name))
+    this.addAction('fillDiagnostics', (bufnr: number) => diagnosticManager.setLocationlist(bufnr))
     this.addAction('diagnosticRefresh', (bufnr?: number) => diagnosticManager.refresh(bufnr))
     this.addAction('diagnosticInfo', (target?: string) => diagnosticManager.echoCurrentMessage(target))
     this.addAction('diagnosticToggle', (enable?: number) => diagnosticManager.toggleDiagnostic(enable))
@@ -151,7 +149,7 @@ export default class Plugin {
     this.addAction('runCommand', (...args: any[]) => this.handler.commands.runCommand(...args))
     this.addAction('repeatCommand', () => this.handler.commands.repeat())
     this.addAction('installExtensions', (...list: string[]) => extensions.installExtensions(list))
-    this.addAction('updateExtensions', (silent: boolean) => extensions.updateExtensions(silent))
+    this.addAction('updateExtensions', (silent: boolean) => extensions.updateExtensions(silent, extensions.getUpdateSettings().updateUIInTab))
     this.addAction('extensionStats', () => extensions.getExtensionStates())
     this.addAction('loadedExtensions', () => extensions.manager.loadedExtensions)
     this.addAction('watchExtension', (id: string) => extensions.manager.watchExtension(id))
